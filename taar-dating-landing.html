@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAAR — Ajnabi se Judo, Real-Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0F0B1E;
+    --bg-soft: #16112B;
+    --card: #1C1735;
+    --coral: #FF4D6D;
+    --coral-soft: rgba(255,77,109,0.15);
+    --cyan: #5EEAD4;
+    --cyan-soft: rgba(94,234,212,0.15);
+    --gold: #FFB74D;
+    --text: #F5F3FA;
+    --text-dim: #A8A0C0;
+    --line: rgba(245,243,250,0.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Hind',sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand,.btn,.step-num{font-family:'Baloo 2',sans-serif;}
+  a{text-decoration:none;color:inherit;}
+  ::selection{background:var(--coral);color:#0F0B1E;}
+
+  /* ---------- background wire texture ---------- */
+  .bg-glow{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,77,109,0.12), transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(94,234,212,0.10), transparent 40%);
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 6%;
+    background:rgba(15,11,30,0.7);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{font-size:1.5rem; font-weight:800; letter-spacing:0.5px;}
+  .brand span{color:var(--coral);}
+  .nav-links{display:flex; gap:32px; font-size:0.98rem; color:var(--text-dim);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{
+    background:var(--coral); color:#fff; padding:10px 22px; border-radius:999px;
+    font-weight:600; font-size:0.95rem;
+    box-shadow:0 0 0 0 rgba(255,77,109,0.5);
+    transition:transform .2s ease;
+  }
+  .nav-cta:hover{transform:scale(1.05);}
+  .hamburger{display:none; flex-direction:column; gap:5px; cursor:pointer; z-index:110;}
+  .hamburger span{width:26px; height:2px; background:var(--text); border-radius:2px; transition:.3s;}
+  .mobile-menu{
+    display:none; position:fixed; inset:0; background:var(--bg); z-index:90;
+    flex-direction:column; align-items:center; justify-content:center; gap:28px;
+    font-size:1.4rem;
+  }
+  .mobile-menu.open{display:flex;}
+
+  /* ---------- hero ---------- */
+  header.hero{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:140px 6% 80px;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    color:var(--cyan); font-size:0.9rem; letter-spacing:2px; text-transform:uppercase;
+    margin-bottom:22px; font-weight:600;
+  }
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan); box-shadow:0 0 12px var(--cyan); animation:blink 1.6s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .hero h1{
+    font-size:clamp(2.6rem, 6vw, 5rem);
+    font-weight:800; line-height:1.08; max-width:960px;
+    letter-spacing:-1px;
+  }
+  .hero h1 .hl{color:var(--coral); position:relative;}
+  .hero p.sub{
+    margin-top:24px; font-size:clamp(1.05rem,2vw,1.3rem); color:var(--text-dim);
+    max-width:600px; font-weight:400;
+  }
+  .hero-ctas{display:flex; gap:18px; margin-top:42px; flex-wrap:wrap; justify-content:center;}
+  .btn{
+    font-weight:700; font-size:1.05rem; padding:16px 34px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:10px; cursor:pointer; border:none;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .btn-primary{background:var(--coral); color:#fff; box-shadow:0 8px 30px rgba(255,77,109,0.35);}
+  .btn-primary:hover{transform:translateY(-3px) scale(1.03); box-shadow:0 12px 40px rgba(255,77,109,0.5);}
+  .btn-ghost{border:1.5px solid var(--line); color:var(--text); background:transparent;}
+  .btn-ghost:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  /* ---------- signature wire animation ---------- */
+  .wire-stage{
+    position:relative; width:min(700px,90vw); height:180px; margin-top:60px;
+  }
+  .wire-stage svg{width:100%; height:100%;}
+  .node{filter:drop-shadow(0 0 10px currentColor);}
+  .pulse-path{
+    stroke-dasharray:8 10; animation:dash 1.2s linear infinite;
+  }
+  @keyframes dash{to{stroke-dashoffset:-36;}}
+  .spark{
+    animation:travel 2.2s cubic-bezier(.4,0,.2,1) infinite;
+  }
+  @keyframes travel{
+    0%{offset-distance:0%; opacity:0;}
+    8%{opacity:1;}
+    92%{opacity:1;}
+    100%{offset-distance:100%; opacity:0;}
+  }
+  .avatar-pulse{animation:ring 2.2s ease-out infinite;}
+  @keyframes ring{
+    0%{r:22; opacity:0.6;}
+    100%{r:48; opacity:0;}
+  }
+
+  /* ---------- section shell ---------- */
+  section{position:relative; z-index:1; padding:110px 6%;}
+  .section-head{max-width:640px; margin:0 auto 64px; text-align:center;}
+  .section-head .eyebrow{justify-content:center;}
+  .section-head h2{font-size:clamp(1.9rem,4vw,2.8rem); font-weight:800; letter-spacing:-0.5px;}
+  .section-head p{color:var(--text-dim); margin-top:14px; font-size:1.08rem;}
+
+  .reveal{opacity:0; transform:translateY(40px); transition:opacity .8s ease, transform .8s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* ---------- how it works : connected steps (real sequence) ---------- */
+  .steps{
+    max-width:900px; margin:0 auto; position:relative;
+  }
+  .steps::before{
+    content:''; position:absolute; left:29px; top:20px; bottom:20px; width:2px;
+    background:linear-gradient(var(--coral), var(--cyan));
+    opacity:0.35;
+  }
+  .step{display:flex; gap:28px; margin-bottom:56px; position:relative;}
+  .step:last-child{margin-bottom:0;}
+  .step-num{
+    flex-shrink:0; width:60px; height:60px; border-radius:50%;
+    background:var(--card); border:1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; font-weight:700; color:var(--coral); position:relative; z-index:2;
+  }
+  .step-body h3{font-size:1.3rem; margin-bottom:8px; font-weight:700;}
+  .step-body p{color:var(--text-dim); font-size:1.02rem; max-width:480px;}
+
+  /* ---------- feature cards ---------- */
+  .grid3{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:26px; max-width:1100px; margin:0 auto;
+  }
+  .fcard{
+    background:var(--card); border:1px solid var(--line); border-radius:22px;
+    padding:36px 30px; transition:transform .3s ease, border-color .3s ease;
+  }
+  .fcard:hover{transform:translateY(-8px); border-color:var(--coral);}
+  .ficon{
+    width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:22px; font-size:1.5rem;
+  }
+  .fcard:nth-child(1) .ficon{background:var(--coral-soft); color:var(--coral);}
+  .fcard:nth-child(2) .ficon{background:var(--cyan-soft); color:var(--cyan);}
+  .fcard:nth-child(3) .ficon{background:rgba(255,183,77,0.15); color:var(--gold);}
+  .fcard h3{font-size:1.25rem; margin-bottom:10px; font-weight:700;}
+  .fcard p{color:var(--text-dim); font-size:0.98rem; line-height:1.6;}
+
+  /* ---------- safety strip ---------- */
+  .safety{
+    max-width:1100px; margin:0 auto; background:linear-gradient(135deg, rgba(255,77,109,0.08), rgba(94,234,212,0.08));
+    border:1px solid var(--line); border-radius:26px; padding:50px; display:flex; gap:40px; flex-wrap:wrap; align-items:center;
+  }
+  .safety-icon{font-size:2.6rem;}
+  .safety h3{font-size:1.4rem; margin-bottom:10px;}
+  .safety p{color:var(--text-dim); max-width:640px;}
+  .safety-list{display:flex; gap:22px; flex-wrap:wrap; margin-top:18px;}
+  .safety-list span{
+    font-size:0.9rem; padding:8px 16px; border-radius:999px; border:1px solid var(--line); color:var(--text-dim);
+  }
+
+  /* ---------- stats ---------- */
+  .stats{display:flex; justify-content:center; gap:70px; flex-wrap:wrap; text-align:center;}
+  .stat h4{font-size:clamp(2rem,4vw,3rem); font-weight:800; color:var(--coral);}
+  .stat span{color:var(--text-dim); font-size:0.95rem;}
+
+  /* ---------- final cta ---------- */
+  .final-cta{
+    text-align:center; background:radial-gradient(circle at center, rgba(255,77,109,0.12), transparent 70%);
+    padding:130px 6%;
+  }
+  .final-cta h2{font-size:clamp(2rem,5vw,3.2rem); font-weight:800; margin-bottom:20px;}
+  .final-cta p{color:var(--text-dim); margin-bottom:36px; font-size:1.1rem;}
+
+  footer{
+    text-align:center; padding:40px 6%; color:var(--text-dim); font-size:0.9rem; border-top:1px solid var(--line);
+  }
+  footer .brand{font-size:1.1rem; margin-bottom:10px; display:block;}
+
+  @media (max-width:900px){
+    .grid3{grid-template-columns:1fr;}
+    .safety{flex-direction:column; align-items:flex-start;}
+    .stats{gap:40px;}
+  }
+  @media (max-width:720px){
+    .nav-links{display:none;}
+    .hamburger{display:flex;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<nav>
+  <div class="brand">TAAR<span>.</span></div>
+  <div class="nav-links">
+    <a href="#how">Kaise Chale</a>
+    <a href="#features">Features</a>
+    <a href="#safety">Safety</a>
+  </div>
+  <a href="#" class="nav-cta">Shuru Karo</a>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#how">Kaise Chale</a>
+  <a href="#features">Features</a>
+  <a href="#safety">Safety</a>
+  <a href="#" class="nav-cta">Shuru Karo</a>
+</div>
+
+<header class="hero">
+  <div class="eyebrow"><span class="dot"></span> Live • Real-Time • Random Match</div>
+  <h1>Ajnabi se dosti,<br>ek <span class="hl">taar</span> jodne jitna aasaan.</h1>
+  <p class="sub">Text, video ya audio — jo bhi mood ho, ek click mein kisi naye insaan se judo. Bina profile ke jhanjhat, sirf real baat cheet.</p>
+  <div class="hero-ctas">
+    <button class="btn btn-primary">⚡ Ajnabi Dhoondo</button>
+    <button class="btn btn-ghost">▶ Demo Dekho</button>
+  </div>
+
+  <div class="wire-stage">
+    <svg viewBox="0 0 700 180">
+      <defs>
+        <path id="wirePath" d="M 90 90 C 250 20, 450 160, 610 90" fill="none"/>
+      </defs>
+      <path d="M 90 90 C 250 20, 450 160, 610 90" fill="none" stroke="rgba(245,243,250,0.15)" stroke-width="2"/>
+      <path class="pulse-path" d="M 90 90 C 250 20, 450 160, 610 90" fill="none" stroke="var(--cyan)" stroke-width="2"/>
+      <circle class="avatar-pulse" cx="90" cy="90" r="22" fill="none" stroke="var(--coral)" stroke-width="2"/>
+      <circle class="node" cx="90" cy="90" r="20" fill="var(--coral)"/>
+      <text x="90" y="96" text-anchor="middle" font-size="18">🙂</text>
+      <circle class="avatar-pulse" cx="610" cy="90" r="22" fill="none" stroke="var(--cyan)" stroke-width="2" style="animation-delay:1.1s"/>
+      <circle class="node" cx="610" cy="90" r="20" fill="var(--cyan)"/>
+      <text x="610" y="96" text-anchor="middle" font-size="18">🙂</text>
+      <circle r="5" fill="var(--gold)" class="spark" style="offset-path:path('M 90 90 C 250 20, 450 160, 610 90');"/>
+      <circle r="5" fill="var(--gold)" class="spark" style="offset-path:path('M 90 90 C 250 20, 450 160, 610 90'); animation-delay:1.1s"/>
+    </svg>
+  </div>
+</header>
+
+<section id="how">
+  <div class="section-head reveal">
+    <div class="eyebrow">Process</div>
+    <h2>Sirf teen step, aur taar jud jaata hai</h2>
+    <p>Koi lambi signup form nahi. Jitna Omegle simple tha, usse bhi tez.</p>
+  </div>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Mode chuno</h3>
+        <p>Text, Audio ya Video — teeno available hai. Interest tags daal do (music, gaming, studies) taaki behtar match mile.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Match hone do</h3>
+        <p>Hamara system real-time mein kisi available ajnabi se turant jod deta hai — ausatan 3 second se kam mein.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Baat karo, ya "Next" dabao</h3>
+        <p>Achi baat ho rahi hai? Chalao. Pasand nahi aaya? Ek tap mein next ajnabi se jud jao — bilkul roulette jaisa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section-head reveal">
+    <div class="eyebrow">Features</div>
+    <h2>Jaise baat karna chaho, waise karo</h2>
+    <p>Teeno mode ek hi jagah — mood ke hisaab se switch karo.</p>
+  </div>
+  <div class="grid3">
+    <div class="fcard reveal">
+      <div class="ficon">💬</div>
+      <h3>Text Chat</h3>
+      <p>Instant real-time messaging, typing indicators ke saath. Chupke se, bina camera ke, baat shuru karo.</p>
+    </div>
+    <div class="fcard reveal">
+      <div class="ficon">🎥</div>
+      <h3>Video Chat</h3>
+      <p>HD peer-to-peer video call, bilkul Omegle/OmeTV jaisa random match. Ek tap mein camera-to-camera connect.</p>
+    </div>
+    <div class="fcard reveal">
+      <div class="ficon">🎙️</div>
+      <h3>Audio Chat</h3>
+      <p>Sirf awaaz mein baat karna chaho to camera band rakho — audio-only mode mein bhi utni hi real connection.</p>
+    </div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="safety reveal">
+    <div class="safety-icon">🛡️</div>
+    <div>
+      <h3>Safety hamari zimmedari hai</h3>
+      <p>Random real-time chat platform hone ki wajah se safety non-negotiable hai — 18+ verification, ek-tap report/block, aur live moderation zaroori hai taaki experience sabke liye theek rahe.</p>
+      <div class="safety-list">
+        <span>✅ Age Verification</span>
+        <span>🚫 Instant Block/Report</span>
+        <span>👁️ AI + Human Moderation</span>
+        <span>🔒 End-to-end encrypted calls</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="stats reveal">
+    <div class="stat"><h4>10K+</h4><span>Daily Connections</span></div>
+    <div class="stat"><h4>&lt;3s</h4><span>Average Match Time</span></div>
+    <div class="stat"><h4>150+</h4><span>Cities Live</span></div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="reveal">
+    <h2>Ready ho? Agla ajnabi bas ek click door hai.</h2>
+    <p>Free hai, signup mein 10 second lagte hai.</p>
+    <button class="btn btn-primary">⚡ Ab Shuru Karo</button>
+  </div>
+</section>
+
+<footer>
+  <span class="brand">TAAR<span style="color:var(--coral)">.</span></span>
+  Made with ⚡ for real conversations. © 2026 TAAR.
+</footer>
+
+<script>
+  // mobile menu
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    mobileMenu.classList.toggle('open');
+  });
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
+  // scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+      }
+    });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
